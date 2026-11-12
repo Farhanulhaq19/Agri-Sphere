@@ -43,3 +43,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+node_modules/
+.env
+**/.env
+agrisphere-api/
+android/build/
+android/app/src/google-services.json
+setup_backend.ps1
+build/
