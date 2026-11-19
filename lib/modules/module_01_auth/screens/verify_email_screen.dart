@@ -5,7 +5,6 @@ import '../../../core/services/api_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../widgets/auth_widgets.dart';
 import 'profile_screen.dart';
-
 class VerifyEmailScreen extends StatefulWidget {
   final String email;
   const VerifyEmailScreen({super.key, required this.email});
