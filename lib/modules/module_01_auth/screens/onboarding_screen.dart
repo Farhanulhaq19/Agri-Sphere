@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_theme.dart';
-import 'login_screen.dart';
-import 'role_selection_screen.dart';
+import 'package:agrisphere/core/theme/app_theme.dart';
+import 'package:agrisphere/modules/module_01_auth/screens/login_screen.dart';
+import 'package:agrisphere/modules/module_01_auth/screens/role_selection_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
