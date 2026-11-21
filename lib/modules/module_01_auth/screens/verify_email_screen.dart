@@ -1,10 +1,11 @@
+import 'package:agrisphere/modules/module_02_dashboard/screens/farmer_buyer_shell.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../core/services/api_service.dart';
-import '../../../core/theme/app_theme.dart';
-import '../widgets/auth_widgets.dart';
-import 'profile_screen.dart';
+import 'package:agrisphere/core/services/api_service.dart';
+import 'package:agrisphere/core/theme/app_theme.dart';
+import 'package:agrisphere/modules/module_01_auth/widgets/auth_widgets.dart';
+import 'package:agrisphere/modules/module_01_auth/screens/profile_screen.dart';
 class VerifyEmailScreen extends StatefulWidget {
   final String email;
   const VerifyEmailScreen({super.key, required this.email});
@@ -68,10 +69,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-          builder: (_) => ProfileScreen(
-            name: (res.data?['name'] ?? 'User').toString(),
-            role: (res.data?['role'] ?? 'Farmer').toString(),
-          ),
+          builder: (_) => const FarmerBuyerShell(),
         ),
         (route) => false,
       );
