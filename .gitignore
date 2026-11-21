@@ -51,3 +51,7 @@ android/build/
 android/app/src/google-services.json
 setup_backend.ps1
 build/
+
+# AgriSphere
+backend/.env
+*.bak*
