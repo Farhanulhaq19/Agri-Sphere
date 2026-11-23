@@ -1,0 +1,622 @@
+﻿
+
+========== C:\Sem- 7\FYP\agrisphere\lib\core\services\api_service.dart ==========
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+class ApiResult {
+  final bool success;
+  final String message;
+  final Map<String, dynamic>? data;
+  const ApiResult(this.success, this.message, [this.data]);
+}
+
+class ApiService {
+  ApiService._();
+  static final ApiService instance = ApiService._();
+
+  static String get baseUrl => kIsWeb ? 'http://localhost:5000/api' : 'http://10.0.2.2:5000/api';
+  static const String googleWebClientId = '141130945534-413c2ou3jllmatikbuj92dd37un013e7.apps.googleusercontent.com';
+
+  Future<void> _saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('token', token);
+  }
+
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
+
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    if (!kIsWeb) {
+      try {
+        await GoogleSignIn().signOut();
+      } catch (_) {}
+    }
+  }
+
+  Future<ApiResult> _post(String path, Map<String, dynamic> body) async {
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$baseUrl$path'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 25));
+      final json = jsonDecode(res.body) as Map<String, dynamic>;
+      final data = json['data'] as Map<String, dynamic>?;
+      if (data != null && data['token'] != null) {
+        await _saveToken(data['token'].toString());
+      }
+      return ApiResult(json['success'] == true, (json['message'] ?? '').toString(), data);
+    } on TimeoutException {
+      return const ApiResult(false, 'Server took too long to respond');
+    } on FormatException {
+      return const ApiResult(false, 'Unexpected server response');
+    } catch (e) {
+      return const ApiResult(false, 'Cannot reach server. Is the backend running?');
+    }
+  }
+
+  Future<ApiResult> signup({
+    required String name,
+    required String email,
+    required String password,
+    required String role,
+  }) {
+    return _post('/auth/signup', {
+      'name': name,
+      'email': email,
+      'password': password,
+      'role': role,
+    });
+  }
+
+  Future<ApiResult> login({required String email, required String password}) {
+    return _post('/auth/login', {'email': email, 'password': password});
+  }
+
+  Future<ApiResult> sendEmailOtp(String email) {
+    return _post('/auth/send-otp', {'email': email});
+  }
+
+  Future<ApiResult> verifyEmail({required String email, required String code}) {
+    return _post('/auth/verify-email', {'email': email, 'code': code});
+  }
+
+  Future<ApiResult> googleSignIn({required bool signup, String role = 'Farmer'}) async {
+    if (kIsWeb) {
+      return const ApiResult(
+        false,
+        'Google sign-in works in the Android app. Run it on the emulator or a phone, not Chrome.',
+      );
+    }
+    try {
+      final g = GoogleSignIn(scopes: ['email'], serverClientId: googleWebClientId);
+      await g.signOut();
+      final account = await g.signIn();
+      if (account == null) return const ApiResult(false, 'Google sign-in cancelled');
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null) return const ApiResult(false, 'Could not get Google token');
+      return await _post('/auth/google', {
+        'idToken': idToken,
+        'role': role,
+        'mode': signup ? 'signup' : 'login',
+      });
+    } catch (e) {
+      return ApiResult(false, 'Google sign-in failed: $e');
+    }
+  }
+}
+
+
+
+========== C:\Sem- 7\FYP\agrisphere\lib\modules\module_01_auth\screens\verify_email_screen.dart ==========
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../../../core/services/api_service.dart';
+import '../../../core/theme/app_theme.dart';
+import '../widgets/auth_widgets.dart';
+import 'profile_screen.dart';
+
+class VerifyEmailScreen extends StatefulWidget {
+  final String email;
+  const VerifyEmailScreen({super.key, required this.email});
+
+  @override
+  State<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
+}
+
+class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
+  final _ctrl = TextEditingController();
+  Timer? _timer;
+  int _seconds = 30;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tick();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _tick() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
+      if (_seconds <= 1) {
+        t.cancel();
+        setState(() => _seconds = 0);
+      } else {
+        setState(() => _seconds--);
+      }
+    });
+  }
+
+  void _toast(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  Future<void> _verify() async {
+    if (_loading) return;
+    final code = _ctrl.text.trim();
+    if (code.length != 6) {
+      _toast('Enter the 6-digit code');
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    setState(() => _loading = true);
+    final res = await ApiService.instance.verifyEmail(email: widget.email, code: code);
+    if (!mounted) return;
+    setState(() => _loading = false);
+    if (res.success) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProfileScreen(
+            name: (res.data?['name'] ?? 'User').toString(),
+            role: (res.data?['role'] ?? 'Farmer').toString(),
+          ),
+        ),
+        (route) => false,
+      );
+    } else {
+      _toast(res.message);
+    }
+  }
+
+  Future<void> _resend() async {
+    if (_seconds > 0) return;
+    final res = await ApiService.instance.sendEmailOtp(widget.email);
+    if (!mounted) return;
+    _toast(res.message);
+    if (res.success) {
+      setState(() => _seconds = 30);
+      _tick();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mm = '00:${_seconds.toString().padLeft(2, '0')}';
+    return AuthScaffold(
+      title: 'Verify your email',
+      subtitle: 'Enter the 6-digit code sent to ${widget.email}',
+      child: Column(
+        children: [
+          const SizedBox(height: 4),
+          TextField(
+            controller: _ctrl,
+            autofocus: true,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(6),
+            ],
+            onChanged: (v) {
+              if (v.length == 6) _verify();
+            },
+            style: const TextStyle(
+              fontSize: 30,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 12,
+              color: AppColors.text,
+            ),
+            decoration: InputDecoration(
+              hintText: '------',
+              hintStyle: const TextStyle(color: AppColors.border, letterSpacing: 12, fontSize: 30),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(vertical: 18),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Check your inbox (and the Spam folder). You can paste the code.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: AppColors.muted),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("Didn't receive it?",
+                  style: TextStyle(fontSize: 12, color: AppColors.muted)),
+              const SizedBox(width: 4),
+              GestureDetector(
+                onTap: _seconds == 0 ? _resend : null,
+                child: Text(
+                  _seconds == 0 ? 'Resend now' : 'Resend in $mm',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: _seconds == 0 ? AppColors.primary : AppColors.muted,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          PrimaryButton(
+            label: 'Verify & continue',
+            icon: Icons.shield_outlined,
+            loading: _loading,
+            onPressed: _verify,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+========== C:\Sem- 7\FYP\agrisphere\backend\routes\auth.js ==========
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+const { OAuth2Client } = require('google-auth-library');
+const User = require('../models/User');
+const EmailOtp = require('../models/EmailOtp');
+
+const router = express.Router();
+const googleClient = new OAuth2Client();
+
+const ROLES = ['Farmer', 'Buyer', 'Expert', 'Supplier', 'Admin'];
+const NAME_RE = /^\p{L}+(?: \p{L}+)*$/u;
+const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
+
+const cleanName = (n) => String(n || '').trim().replace(/\s+/g, ' ');
+const cleanEmail = (e) => String(e || '').trim().toLowerCase();
+const hashCode = (email, code) =>
+  crypto.createHash('sha256').update(email + ':' + code).digest('hex');
+const signToken = (user) =>
+  jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+const publicUser = (u, token) => ({
+  id: u._id,
+  name: u.name,
+  email: u.email || '',
+  role: u.role,
+  token,
+});
+const ok = (res, message, data) => res.json({ success: true, message, data });
+const fail = (res, message, status = 400, data) =>
+  res.status(status).json({ success: false, message, data });
+
+function checkName(name) {
+  if (!name) return 'Enter your full name';
+  if (name.length < 2 || name.length > 50) return 'Name must be 2 to 50 letters';
+  if (!NAME_RE.test(name)) return 'Name can contain letters only (no numbers or symbols)';
+  return null;
+}
+function checkEmail(email) {
+  if (!email || email.length > 254 || !EMAIL_RE.test(email)) return 'Enter a valid email address';
+  return null;
+}
+function checkPassword(pw) {
+  if (pw.length < 8) return 'Password must be at least 8 characters';
+  if (pw.length > 72) return 'Password is too long';
+  return null;
+}
+
+// ---------------------------------------------------------------- email sending
+let transporter = null;
+function getTransporter() {
+  if (transporter) return transporter;
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return null;
+  transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+  });
+  return transporter;
+}
+
+async function sendCodeEmail(email, name, code) {
+  const t = getTransporter();
+  if (!t) return false;
+  await t.sendMail({
+    from: `"AgriSphere" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: 'Your AgriSphere verification code',
+    text: `Hi ${name},\n\nYour AgriSphere verification code is ${code}.\nIt expires in 10 minutes.\n\nIf you did not sign up, ignore this email.`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:420px;margin:auto">
+      <h2 style="color:#0F5A32">AgriSphere</h2>
+      <p>Hi ${name},</p>
+      <p>Your verification code is:</p>
+      <p style="font-size:34px;font-weight:bold;letter-spacing:8px;color:#2E9B52">${code}</p>
+      <p style="color:#6B7C72">It expires in 10 minutes. If you did not sign up, ignore this email.</p>
+    </div>`,
+  });
+  return true;
+}
+
+// creates a code, stores its hash, emails it. Returns { sent, dev, code }
+async function issueCode(email, name) {
+  const code = String(crypto.randomInt(100000, 1000000));
+  await EmailOtp.findOneAndUpdate(
+    { email },
+    {
+      codeHash: hashCode(email, code),
+      attempts: 0,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    },
+    { upsert: true, new: true }
+  );
+  let sent = false;
+  try {
+    sent = await sendCodeEmail(email, name, code);
+  } catch (e) {
+    console.error('Email send failed:', e.message);
+  }
+  const dev = process.env.DEV_MODE === 'true';
+  if (!sent) console.log(`[OTP] code for ${email}: ${code}`);
+  return { sent, dev, code };
+}
+
+function codeMessage(r) {
+  return r.sent ? 'Verification code sent to your email' : `Email not configured. Dev code: ${r.code}`;
+}
+
+// ---------------------------------------------------------------- SIGNUP
+router.post('/signup', async (req, res) => {
+  try {
+    const name = cleanName(req.body.name);
+    const email = cleanEmail(req.body.email);
+    const password = String(req.body.password || '');
+    const role = ROLES.includes(req.body.role) ? req.body.role : 'Farmer';
+
+    const err = checkName(name) || checkEmail(email) || checkPassword(password);
+    if (err) return fail(res, err);
+
+    let user = await User.findOne({ email });
+    if (user && user.emailVerified) {
+      return fail(res, 'An account with this email already exists. Please log in.', 409);
+    }
+    const passwordHash = await bcrypt.hash(password, 10);
+    if (user) {
+      user.name = name;
+      user.passwordHash = passwordHash;
+      user.role = role;
+      await user.save();
+    } else {
+      user = await User.create({ name, email, passwordHash, role, emailVerified: false });
+    }
+
+    const r = await issueCode(email, name);
+    if (!r.sent && !r.dev) return fail(res, 'Could not send the verification email. Try again.', 502);
+    return ok(res, codeMessage(r), { email, needsVerification: true });
+  } catch (e) {
+    console.error(e);
+    if (e.code === 11000) return fail(res, 'An account with this email already exists', 409);
+    return fail(res, 'Server error', 500);
+  }
+});
+
+// ---------------------------------------------------------------- RESEND CODE
+router.post('/send-otp', async (req, res) => {
+  try {
+    const email = cleanEmail(req.body.email);
+    if (checkEmail(email)) return fail(res, 'Enter a valid email address');
+    const user = await User.findOne({ email });
+    if (!user || user.emailVerified) return fail(res, 'No pending verification for this email', 404);
+
+    const rec = await EmailOtp.findOne({ email });
+    if (rec && Date.now() - rec.updatedAt.getTime() < 30 * 1000) {
+      return fail(res, 'Please wait a few seconds before requesting another code', 429);
+    }
+    const r = await issueCode(email, user.name);
+    if (!r.sent && !r.dev) return fail(res, 'Could not send the email. Try again.', 502);
+    return ok(res, codeMessage(r));
+  } catch (e) {
+    console.error(e);
+    return fail(res, 'Server error', 500);
+  }
+});
+
+// ---------------------------------------------------------------- VERIFY EMAIL
+router.post('/verify-email', async (req, res) => {
+  try {
+    const email = cleanEmail(req.body.email);
+    const code = String(req.body.code || '').trim();
+    const rec = await EmailOtp.findOne({ email });
+    if (!rec) return fail(res, 'Code expired. Tap Resend to get a new one.');
+    if (rec.attempts >= 5) return fail(res, 'Too many attempts. Request a new code.', 429);
+
+    if (rec.codeHash !== hashCode(email, code)) {
+      rec.attempts += 1;
+      await rec.save();
+      return fail(res, 'Incorrect code');
+    }
+    await EmailOtp.deleteOne({ email });
+    const user = await User.findOneAndUpdate({ email }, { emailVerified: true }, { new: true });
+    if (!user) return fail(res, 'Account not found', 404);
+    return ok(res, 'Email verified', publicUser(user, signToken(user)));
+  } catch (e) {
+    console.error(e);
+    return fail(res, 'Server error', 500);
+  }
+});
+
+// ---------------------------------------------------------------- LOGIN
+router.post('/login', async (req, res) => {
+  try {
+    const email = cleanEmail(req.body.email);
+    const password = String(req.body.password || '');
+    if (checkEmail(email) || !password) return fail(res, 'Enter a valid email and your password');
+
+    const user = await User.findOne({ email });
+    if (!user) return fail(res, 'Invalid email or password', 401);
+    if (!user.passwordHash) return fail(res, 'This account uses Google. Tap Continue with Google.', 401);
+
+    const match = await bcrypt.compare(password, user.passwordHash);
+    if (!match) return fail(res, 'Invalid email or password', 401);
+
+    if (!user.emailVerified) {
+      await issueCode(email, user.name);
+      return fail(res, 'Please verify your email. We sent you a new code.', 403, {
+        needsVerification: true,
+        email,
+      });
+    }
+    return ok(res, 'Login successful', publicUser(user, signToken(user)));
+  } catch (e) {
+    console.error(e);
+    return fail(res, 'Server error', 500);
+  }
+});
+
+// ---------------------------------------------------------------- GOOGLE
+router.post('/google', async (req, res) => {
+  try {
+    const { idToken, mode } = req.body;
+    const role = ROLES.includes(req.body.role) ? req.body.role : 'Farmer';
+    if (!idToken) return fail(res, 'Missing Google token');
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const p = ticket.getPayload();
+    const email = cleanEmail(p.email);
+    if (!p.email_verified) return fail(res, 'Your Google email is not verified', 401);
+
+    let user = await User.findOne({ $or: [{ googleId: p.sub }, { email }] });
+    if (!user) {
+      if (mode !== 'signup') {
+        return fail(res, 'No account found for this Google account. Please sign up first.', 404, {
+          noAccount: true,
+        });
+      }
+      const gName = cleanName(String(p.name || '').replace(/[^\p{L} ]/gu, '')) || 'User';
+      user = await User.create({ name: gName, email, googleId: p.sub, role, emailVerified: true });
+    } else {
+      if (!user.emailVerified) user.passwordHash = undefined; // unverified signup is replaced by the real owner
+      user.googleId = user.googleId || p.sub;
+      user.emailVerified = true;
+      await user.save();
+    }
+    return ok(res, 'Login successful', publicUser(user, signToken(user)));
+  } catch (e) {
+    console.error(e);
+    return fail(res, 'Google verification failed', 401);
+  }
+});
+
+// ---------------------------------------------------------------- ME (token test)
+router.get('/me', async (req, res) => {
+  try {
+    const token = (req.headers.authorization || '').replace('Bearer ', '');
+    const { id } = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(id);
+    if (!user) return fail(res, 'User not found', 404);
+    return ok(res, 'OK', publicUser(user));
+  } catch (e) {
+    return fail(res, 'Not authorised', 401);
+  }
+});
+
+module.exports = router;
+
+========== C:\Sem- 7\FYP\agrisphere\backend\utils\sendEmail.js ==========
+require('dotenv').config();
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
+  auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+  connectionTimeout: 15000,
+});
+
+transporter.verify((err) => {
+  if (err) console.error('Email setup problem:', err.message);
+  else console.log('Email server ready');
+});
+
+async function sendVerificationEmail(to, code) {
+  if (process.env.DEV_MODE === 'true') {
+    console.log(`DEV MODE: code for ${to} is ${code}`);
+    return { sent: false, devCode: code };
+  }
+  try {
+    await transporter.sendMail({
+      from: `"AgriSphere" <${process.env.EMAIL_USER}>`,
+      to,
+      subject: 'Your AgriSphere verification code',
+      html: `<p>Your AgriSphere verification code is:</p><h2 style="letter-spacing:4px">${code}</h2><p>It expires in 10 minutes.</p>`,
+    });
+    return { sent: true };
+  } catch (err) {
+    console.error('Email send failed:', err.message);
+    throw err;
+  }
+}
+
+module.exports = { sendVerificationEmail };
+
+
+========== .env (values hidden) ==========
+PORT=<set, length 4>
+MONGO_URI=<set, length 39> (HAS SPACE OR QUOTE)
+JWT_SECRET=<set, length 36>
+GOOGLE_CLIENT_ID=<set, length 72>
+DEV_MODE=<set, length 5>
+EMAIL_USER=<set, length 24>
+EMAIL_PASS=<set, length 16>
+
+========== SIGNUP API TEST ==========
+STATUS: 502
+BODY: 
