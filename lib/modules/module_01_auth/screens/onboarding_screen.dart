@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_theme.dart';
-import 'login_screen.dart';
-import 'role_selection_screen.dart';
+import 'package:agrisphere/core/theme/app_theme.dart';
+import 'package:agrisphere/modules/module_01_auth/screens/login_screen.dart';
+import 'package:agrisphere/modules/module_01_auth/screens/role_selection_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -31,7 +31,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -62,7 +62,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.sun.withOpacity(0.25),
+                  color: AppColors.sun.withValues(alpha: 0.25),
                 ),
                 child: Container(
                   width: 76,
@@ -83,7 +83,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Row(mainAxisSize: MainAxisSize.min, children: [ Image.asset('assets/img/2_mark_transparent.png', width: 28, height: 28, cacheWidth: 100, errorBuilder: (_, __, ___) => const Icon(Icons.eco_outlined, color: Colors.white, size: 18)),
@@ -122,7 +122,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             Text(
                               _slides[i][1],
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.85),
+                                color: Colors.white.withValues(alpha: 0.85),
                                 fontSize: 14,
                               ),
                             ),
