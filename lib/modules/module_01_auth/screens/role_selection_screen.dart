@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_theme.dart';
-import '../widgets/auth_widgets.dart';
-import 'signup_screen.dart';
+import 'package:agrisphere/core/theme/app_theme.dart';
+import 'package:agrisphere/modules/module_01_auth/widgets/auth_widgets.dart';
+import 'package:agrisphere/modules/module_01_auth/screens/signup_screen.dart';
 
 class _RoleItem {
   final String value;
