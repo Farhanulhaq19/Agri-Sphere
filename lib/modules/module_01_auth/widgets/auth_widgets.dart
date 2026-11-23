@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../core/theme/app_theme.dart';
+import 'package:agrisphere/core/theme/app_theme.dart';
 
 String roleDisplay(String role) => role == 'Expert' ? 'Agri Expert' : role;
 
@@ -42,7 +42,7 @@ class AuthScaffold extends StatelessWidget {
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -73,7 +73,7 @@ class AuthScaffold extends StatelessWidget {
                       Text(
                         subtitle!,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           fontSize: 13,
                         ),
                       ),
@@ -211,7 +211,7 @@ class PrimaryButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.35),
+            color: AppColors.primary.withValues(alpha: 0.35),
             blurRadius: 12,
             offset: const Offset(0, 5),
           ),

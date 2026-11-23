@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use('/api/agri', require('./routes/agri'));
 
 app.get('/', (req, res) => res.send('AgriSphere API is running'));
 app.use('/api/auth', require('./routes/auth'));

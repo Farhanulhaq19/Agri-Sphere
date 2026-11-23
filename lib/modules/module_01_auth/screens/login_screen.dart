@@ -1,12 +1,12 @@
+import 'package:agrisphere/modules/module_01_auth/screens/role_gate_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../core/services/api_service.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/validators.dart';
-import '../widgets/auth_widgets.dart';
-import 'profile_screen.dart';
-import 'role_selection_screen.dart';
-import 'verify_email_screen.dart';
+import 'package:agrisphere/core/services/api_service.dart';
+import 'package:agrisphere/core/theme/app_theme.dart';
+import 'package:agrisphere/core/utils/validators.dart';
+import 'package:agrisphere/modules/module_01_auth/widgets/auth_widgets.dart';
+import 'package:agrisphere/modules/module_01_auth/screens/role_selection_screen.dart';
+import 'package:agrisphere/modules/module_01_auth/screens/verify_email_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -39,10 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (_) => ProfileScreen(
-          name: (d?['name'] ?? 'User').toString(),
-          role: (d?['role'] ?? 'Farmer').toString(),
-        ),
+        builder: (_) => const RoleGateScreen(),
       ),
       (route) => false,
     );
@@ -181,3 +178,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+

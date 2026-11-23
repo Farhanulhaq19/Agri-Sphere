@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../core/services/api_service.dart';
-import '../../../core/theme/app_theme.dart';
-import '../widgets/auth_widgets.dart';
-import 'login_screen.dart';
+import 'package:agrisphere/core/services/api_service.dart';
+import 'package:agrisphere/core/theme/app_theme.dart';
+import 'package:agrisphere/modules/module_01_auth/widgets/auth_widgets.dart';
+import 'package:agrisphere/modules/module_01_auth/screens/login_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   final String name;
@@ -43,7 +43,7 @@ class ProfileScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 14,
                 offset: const Offset(0, 4),
               ),
@@ -111,7 +111,7 @@ class ProfileScreen extends StatelessWidget {
                         padding:
                             const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Row(

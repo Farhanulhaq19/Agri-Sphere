@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
@@ -16,7 +16,7 @@ class ApiService {
   ApiService._();
   static final ApiService instance = ApiService._();
 
-  static const String baseUrl = 'http://10.0.2.2:5000/api';
+  static String get baseUrl => kIsWeb ? 'http://localhost:5000/api' : 'http://10.0.2.2:5000/api';
   static const String googleWebClientId = '141130945534-413c2ou3jllmatikbuj92dd37un013e7.apps.googleusercontent.com';
 
   Future<void> _saveToken(String token) async {
@@ -114,3 +114,4 @@ class ApiService {
     }
   }
 }
+
