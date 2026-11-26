@@ -1,16 +1,20 @@
-import 'package:agrisphere/modules/module_01_auth/screens/role_gate_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:agrisphere/core/i18n/app_lang.dart';
 import 'package:flutter/services.dart';
 import 'package:agrisphere/core/services/api_service.dart';
 import 'package:agrisphere/core/theme/app_theme.dart';
 import 'package:agrisphere/core/utils/validators.dart';
+import 'package:agrisphere/modules/module_01_auth/roles.dart';
 import 'package:agrisphere/modules/module_01_auth/widgets/auth_widgets.dart';
+import 'package:agrisphere/modules/module_01_auth/widgets/password_strength.dart';
 import 'package:agrisphere/modules/module_01_auth/screens/login_screen.dart';
+import 'package:agrisphere/modules/module_01_auth/screens/role_gate_screen.dart';
+import 'package:agrisphere/modules/module_01_auth/screens/role_picker_screen.dart';
 import 'package:agrisphere/modules/module_01_auth/screens/verify_email_screen.dart';
 
 class SignupScreen extends StatefulWidget {
-  final String role;
-  const SignupScreen({super.key, this.role = 'Farmer'});
+  final List<String> roles;
+  const SignupScreen({super.key, this.roles = const ['Farmer']});
 
   @override
   State<SignupScreen> createState() => _SignupScreenState();
@@ -20,7 +24,9 @@ class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
+  final _confirmCtrl = TextEditingController();
   bool _agree = true;
   bool _hidePass = true;
   bool _loading = false;
@@ -30,20 +36,24 @@ class _SignupScreenState extends State<SignupScreen> {
   void dispose() {
     _nameCtrl.dispose();
     _emailCtrl.dispose();
+    _phoneCtrl.dispose();
     _passCtrl.dispose();
+    _confirmCtrl.dispose();
     super.dispose();
   }
 
   void _toast(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr(msg))));
   }
 
-  void _openProfile(Map<String, dynamic>? d) {
+  void _afterGoogle(Map<String, dynamic>? d) {
+    final roles = (d?['roles'] as List?) ?? const [];
+    final next = roles.length > 1
+        ? const RolePickerScreen()
+        : const RoleGateScreen();
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
-        builder: (_) => const RoleGateScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => next),
       (route) => false,
     );
   }
@@ -61,7 +71,8 @@ class _SignupScreenState extends State<SignupScreen> {
       name: Validators.cleanName(_nameCtrl.text),
       email: email,
       password: _passCtrl.text,
-      role: widget.role,
+      roles: widget.roles,
+      phone: _phoneCtrl.text.replaceAll(RegExp(r'[\s-]'), ''),
     );
     if (!mounted) return;
     setState(() => _loading = false);
@@ -76,11 +87,14 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Future<void> _google() async {
     setState(() => _gLoading = true);
-    final res = await ApiService.instance.googleSignIn(signup: true, role: widget.role);
+    final res = await ApiService.instance.googleSignIn(
+      signup: true,
+      roles: widget.roles,
+    );
     if (!mounted) return;
     setState(() => _gLoading = false);
     if (res.success) {
-      _openProfile(res.data);
+      _afterGoogle(res.data);
     } else {
       _toast(res.message);
     }
@@ -89,10 +103,10 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return AuthScaffold(
-      title: 'Create account',
-      subtitle: 'Join AgriSphere in less than a minute.',
+      title: tr('Create account'),
+      subtitle: tr('Join AgriSphere in less than a minute.'),
       footer: AuthFooterLink(
-        text: 'Already registered?',
+        text: tr('Already registered?'),
         action: 'Login',
         onTap: () => Navigator.pushReplacement(
           context,
@@ -101,6 +115,7 @@ class _SignupScreenState extends State<SignupScreen> {
       ),
       child: Form(
         key: _formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -113,66 +128,107 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.badge_outlined, size: 18, color: AppColors.primary),
+                  const Icon(
+                    Icons.badge_outlined,
+                    size: 18,
+                    color: AppColors.primary,
+                  ),
                   const SizedBox(width: 8),
-                  const Text('Registering as ',
-                      style: TextStyle(fontSize: 12.5, color: AppColors.muted)),
-                  Text(roleDisplay(widget.role),
+                  Expanded(
+                    child: Text(
+                      widget.roles.map(roleName).join(' + '),
                       style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primary)),
-                  const Spacer(),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: const Text('Change',
-                        style: TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary)),
+                    child: Text(
+                      tr('Change'),
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
             AppTextField(
-              label: 'Full name',
-              hint: 'Ali Khan',
+              label: tr('Full name'),
+              hint: tr('Ali Khan'),
               icon: Icons.person_outline,
               controller: _nameCtrl,
               textCapitalization: TextCapitalization.words,
               inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[\p{L} ]', unicode: true)),
+                FilteringTextInputFormatter.allow(
+                  RegExp(r'[\p{L} ]', unicode: true),
+                ),
                 LengthLimitingTextInputFormatter(50),
               ],
               validator: Validators.name,
             ),
             const SizedBox(height: 12),
             AppTextField(
-              label: 'Email',
-              hint: 'ali.khan@email.com',
+              label: tr('Email'),
+              hint: tr('ali.khan@email.com'),
               icon: Icons.mail_outline,
               controller: _emailCtrl,
               keyboardType: TextInputType.emailAddress,
-              inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'\s'))],
+              inputFormatters: [
+                FilteringTextInputFormatter.deny(RegExp(r'\s')),
+              ],
               validator: Validators.email,
             ),
             const SizedBox(height: 12),
             AppTextField(
-              label: 'Password',
-              hint: 'Min. 8 characters',
+              label: tr('Phone (optional)'),
+              hint: tr('03001234567'),
+              icon: Icons.phone_outlined,
+              controller: _phoneCtrl,
+              keyboardType: TextInputType.phone,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9+ \-]')),
+                LengthLimitingTextInputFormatter(16),
+              ],
+              validator: Validators.phoneOptional,
+            ),
+            const SizedBox(height: 12),
+            AppTextField(
+              label: tr('Password'),
+              hint: tr('Min. 8 characters, with a number'),
               icon: Icons.lock_outline,
               controller: _passCtrl,
               obscure: _hidePass,
               suffix: IconButton(
                 icon: Icon(
-                  _hidePass ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                  _hidePass
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
                   size: 20,
                   color: AppColors.muted,
                 ),
                 onPressed: () => setState(() => _hidePass = !_hidePass),
               ),
               validator: Validators.newPassword,
+            ),
+            AnimatedBuilder(
+              animation: _passCtrl,
+              builder: (context, child) => PasswordStrength(_passCtrl.text),
+            ),
+            const SizedBox(height: 12),
+            AppTextField(
+              label: tr('Confirm password'),
+              hint: tr('Type the password again'),
+              icon: Icons.lock_outline,
+              controller: _confirmCtrl,
+              obscure: _hidePass,
+              validator: Validators.sameAs(() => _passCtrl.text),
             ),
             const SizedBox(height: 8),
             Row(
@@ -187,9 +243,9 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'I agree to the Terms of Service and Privacy Policy',
+                    tr('I agree to the Terms of Service and Privacy Policy'),
                     style: TextStyle(fontSize: 11.5, color: AppColors.muted),
                   ),
                 ),
@@ -197,16 +253,16 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             const SizedBox(height: 16),
             PrimaryButton(
-              label: 'Create account',
+              label: tr('Create account'),
               icon: Icons.chevron_right,
               loading: _loading,
               onPressed: _signup,
             ),
             const SizedBox(height: 16),
-            const OrDivider(text: 'or sign up with'),
+            OrDivider(text: tr('or sign up with')),
             const SizedBox(height: 14),
             SocialButton(
-              label: 'Continue with Google',
+              label: tr('Continue with Google'),
               icon: Icons.g_mobiledata,
               loading: _gLoading,
               onTap: _google,
@@ -217,4 +273,3 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 }
-

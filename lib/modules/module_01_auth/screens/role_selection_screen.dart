@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:agrisphere/core/widgets/app_extras.dart';
+import 'package:agrisphere/core/i18n/app_lang.dart';
 import 'package:agrisphere/core/theme/app_theme.dart';
+import 'package:agrisphere/modules/module_01_auth/roles.dart';
 import 'package:agrisphere/modules/module_01_auth/widgets/auth_widgets.dart';
 import 'package:agrisphere/modules/module_01_auth/screens/signup_screen.dart';
 
-class _RoleItem {
-  final String value;
-  final String name;
-  final String desc;
-  final IconData icon;
-  const _RoleItem(this.value, this.name, this.desc, this.icon);
-}
-
+/// Pick one or more roles, for example Farmer + Machinery Owner.
+/// You can add or switch roles later from the Account page.
 class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({super.key});
 
@@ -19,28 +16,31 @@ class RoleSelectionScreen extends StatefulWidget {
 }
 
 class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
-  static const List<_RoleItem> _roles = [
-    _RoleItem('Farmer', 'Farmer', 'Manage crops, sell produce, ask experts', Icons.grass),
-    _RoleItem('Buyer', 'Buyer', 'Browse the marketplace and order fresh', Icons.shopping_basket_outlined),
-    _RoleItem('Expert', 'Agri Expert', 'Answer queries and publish advisories', Icons.eco_outlined),
-    _RoleItem('Supplier', 'Supplier', 'List seeds, fertiliser and equipment', Icons.inventory_2_outlined),
-    _RoleItem('Admin', 'Admin', 'Manage users, approvals and reports', Icons.shield_outlined),
-  ];
+  final Set<String> _selected = {'Farmer'};
 
-  int _selected = 0;
+  void _toggle(String v) {
+    setState(() {
+      if (_selected.contains(v)) {
+        if (_selected.length > 1) _selected.remove(v);
+      } else {
+        _selected.add(v);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final picked = kRoles.where((r) => _selected.contains(r.value)).toList();
     return AuthScaffold(
-      title: 'Choose your role',
-      subtitle: 'Pick how you will use AgriSphere.',
+      title: tr('Choose your roles'),
+      subtitle:
+          tr('Pick everything that applies. You can switch between roles any time.'),
       child: Column(
         children: [
-          ...List.generate(_roles.length, (i) {
-            final r = _roles[i];
-            final sel = i == _selected;
+          ...kRoles.map((r) {
+            final sel = _selected.contains(r.value);
             return GestureDetector(
-              onTap: () => setState(() => _selected = i),
+              onTap: () => _toggle(r.value),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 margin: const EdgeInsets.only(bottom: 12),
@@ -55,35 +55,33 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: sel ? AppColors.primary : const Color(0xFFE4F2E9),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(r.icon,
-                          size: 22, color: sel ? Colors.white : AppColors.primary),
-                    ),
+                    RoleBadge(r.value, size: 58),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(r.name,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14,
-                                  color: AppColors.text)),
+                          Text(
+                            r.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              color: AppColors.text,
+                            ),
+                          ),
                           const SizedBox(height: 2),
-                          Text(r.desc,
-                              style: const TextStyle(
-                                  fontSize: 11.5, color: AppColors.muted)),
+                          Text(
+                            r.desc,
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              color: AppColors.muted,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                     Icon(
-                      sel ? Icons.check_circle : Icons.circle_outlined,
+                      sel ? Icons.check_box : Icons.check_box_outline_blank,
                       color: sel ? AppColors.primary : AppColors.border,
                     ),
                   ],
@@ -91,14 +89,18 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
               ),
             );
           }),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
           PrimaryButton(
-            label: 'Continue as ${_roles[_selected].name}',
+            label: picked.length == 1
+                ? 'Continue as ${picked.first.name}'
+                : 'Continue with ${picked.length} roles',
             icon: Icons.chevron_right,
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => SignupScreen(role: _roles[_selected].value),
+                builder: (_) => SignupScreen(
+                  roles: picked.map((e) => e.value).toList(),
+                ),
               ),
             ),
           ),
