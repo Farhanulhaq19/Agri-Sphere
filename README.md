@@ -18,6 +18,17 @@
 
 ---
 
+## Documentation
+
+| Doc | What's inside |
+|---|---|
+| [docs/DEMO.md](docs/DEMO.md) | Demo accounts and a 10-minute demo script (`npm run seed:demo`) |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Architecture, ER, use-case and sequence diagrams |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | Going online: MongoDB Atlas, Render, APK, Firebase push |
+| [docs/SETUP.md](docs/SETUP.md) | Local setup notes |
+
+**Tests:** `npm test` in `backend` (19 unit tests) and `flutter test` (17 tests). **Urdu coverage:** `python scripts/check_urdu.py`.
+
 ## Table of contents
 
 - [The problem](#the-problem)
@@ -75,21 +86,28 @@ One account can hold several roles and switch between them without logging out.
 |---|---|---|
 | 01 | **Auth & Profile** | Onboarding, sign up / log in, email OTP verification, Google Sign-In, forgot / reset / change password, role selection and switching, notifications, account settings |
 | 02 | **Dashboard** | Home dashboard and bottom navigation for farmers and buyers |
-| 03 | **Crops** | Add crops, crop detail, task checklist per crop |
-| 04 | **Marketplace** | Browse and search listings, product detail, sell produce, make and answer offers, market average price |
-| 05 | **Orders** | Cart, checkout, order tracking (placed → confirmed → picked up → out for delivery → delivered), cancellation |
+| 03 | **Crops** | Smart crop calendar (full-season task plan per crop with real dates), weather-aware irrigation tips, crop photos |
+| 04 | **Marketplace** | Browse with photos, sort by newest / near me / price / rating, distance badges, product photo gallery and pickup map, sell produce with photos and map pin, offers, market average price |
+| 05 | **Orders & Checkout** | Cart → checkout (receiver, phone, city, address), Standard / Express delivery, **Cash on Delivery, Easypaisa or card via Easypaisa** with payment screenshot + transaction ID, seller / admin verification, order tracking, cancellation |
 | 06 | **Expert** | Ask an expert, expert inbox and answers |
+| 11 | **Social** | Buyer ↔ seller **live chat** (WebSockets), saved items, reviews, seller profiles, push notifications |
+| 12 | **AI** | **AgriChatBot** (free AI farming assistant for every role, English & Urdu, 24/7) and **Crop Doctor** (photo → disease, severity, treatment) |
 | 07 | **Supplier** | Supplier dashboard, product catalogue, incoming orders, profile |
-| 08 | **Admin** | Platform stats, user verification, listing moderation |
-| 09 | **Machinery** | Browse and book machines, booking detail and live progress, payment and rating; owner home, fleet, technicians, schedule, maintenance and earnings |
-| 10 | **Warehouse** | Browse warehouses and request storage, storage booking detail, payment and rating; owner home, warehouses, labour, storage readings and tasks, payments |
+| 08 | **Admin** | Charts (sales, users, orders), Easypaisa payment verification queue, user verification, listing moderation, activity log |
+| 09 | **Machinery** | Machine photos, map location and "near me" search, field pin with directions, live machine position on map, Easypaisa / card / cash payments with owner verification, browse and book machines, booking detail and live progress, payment and rating; owner home, fleet, technicians, schedule, maintenance and earnings |
+| 10 | **Warehouse** | Warehouse photos, map location and "near me" search, partial online payments with screenshot verification, browse warehouses and request storage, storage booking detail, payment and rating; owner home, warehouses, labour, storage readings and tasks, payments |
 
 ## Tech stack
 
 | Layer | Technology |
 |---|---|
 | Mobile / web client | Flutter (Dart ^3.9), Material Design |
-| Client packages | `http`, `shared_preferences`, `google_sign_in` |
+| Client packages | `http`, `shared_preferences`, `google_sign_in`, `image_picker`, `flutter_map` + `latlong2` (OpenStreetMap), `geolocator`, `url_launcher` |
+| Maps & location | OpenStreetMap tiles and Nominatim search (free, no API key), device GPS, Google Maps directions link |
+| AI | Free by default: **Ollama** (runs on the server computer, offline) or **Groq** (free online key); a built-in farming guide answers when no model is running. Claude is optional. |
+| Real-time | Socket.IO live chat and notifications; Firebase Cloud Messaging push (optional) |
+| CI | GitHub Actions: Flutter analyze, tests and debug APK build; backend install, syntax checks and unit tests |
+| Payments | Cash on Delivery and manual Easypaisa transfers (card payments through the Easypaisa app) verified by screenshot |
 | Backend | Node.js, Express 5 |
 | Database | MongoDB with Mongoose |
 | Auth | JWT, bcrypt password hashing, Google ID token verification, email OTP |
@@ -237,10 +255,31 @@ All backend settings live in `backend/.env` (never commit this file).
 | `DEV_MODE` | no | `true` makes development easier: OTP codes are returned/logged instead of only emailed |
 | `ADMIN_EMAILS` | no | Comma-separated emails that are allowed to be Admin |
 | `CORS_ORIGIN` | no | Allowed origin for the web client, defaults to `*` |
+| `EASYPAISA_NUMBER` / `EASYPAISA_NAME` | no | Easypaisa account buyers send online payments to |
 | `SEED_DEMO_DATA` | no | `true` loads demo listings and fleet on first request. Set to `false` in production |
 
 > **No email set up?** Leave `EMAIL_USER` / `EMAIL_PASS` empty. The OTP code is printed in the backend console,
 > so you can still verify accounts during development.
+
+### Free AI setup
+
+AgriChatBot and the Crop Doctor need no paid service:
+
+| Option | Setup | Notes |
+|---|---|---|
+| **Ollama** (default) | Install from [ollama.com](https://ollama.com), then `ollama pull gemma3:4b` | Runs on the backend computer, offline, no limits |
+| **Groq** | Free key from [console.groq.com](https://console.groq.com) → `GROQ_API_KEY=` (and `AI_PROVIDER=groq`) in `backend/.env` | Fast, free tier has rate limits |
+| **Built-in guide** | Nothing | Answers ~25 common farming topics when no model is running |
+
+`http://localhost:5000/api/health` shows which one is active (`"ai": "ollama" | "groq" | "offline"`).
+
+### Testing on a phone
+
+Run the backend on your laptop, allow port 5000 in Windows Firewall, then build with your laptop's Wi-Fi IP:
+
+```powershell
+flutter build apk --release --dart-define=API_HOST=http://YOUR-LAPTOP-IP:5000
+```
 
 ## API overview
 

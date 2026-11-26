@@ -57,3 +57,14 @@ backend/.env
 *.bak*
 
 debug_dump.txt
+
+# uploaded payment screenshots
+backend/uploads/
+
+# Firebase service account key (secret)
+backend/firebase-service-account.json
+
+# local / generated
+.write_test
+android/.kotlin/
+docs/urdu-missing.txt
