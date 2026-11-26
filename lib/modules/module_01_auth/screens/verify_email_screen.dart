@@ -1,10 +1,13 @@
 import 'package:agrisphere/modules/module_01_auth/screens/role_gate_screen.dart';
+import 'package:agrisphere/core/i18n/app_lang.dart';
+import 'package:agrisphere/modules/module_01_auth/screens/role_picker_screen.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:agrisphere/core/services/api_service.dart';
 import 'package:agrisphere/core/theme/app_theme.dart';
 import 'package:agrisphere/modules/module_01_auth/widgets/auth_widgets.dart';
+
 class VerifyEmailScreen extends StatefulWidget {
   final String email;
   const VerifyEmailScreen({super.key, required this.email});
@@ -49,7 +52,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   }
 
   void _toast(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr(msg))));
   }
 
   Future<void> _verify() async {
@@ -61,15 +64,20 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     }
     FocusScope.of(context).unfocus();
     setState(() => _loading = true);
-    final res = await ApiService.instance.verifyEmail(email: widget.email, code: code);
+    final res = await ApiService.instance.verifyEmail(
+      email: widget.email,
+      code: code,
+    );
     if (!mounted) return;
     setState(() => _loading = false);
     if (res.success) {
+      final roles = (res.data?['roles'] as List?) ?? const [];
+      final next = roles.length > 1
+          ? const RolePickerScreen()
+          : const RoleGateScreen();
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-          builder: (_) => const RoleGateScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => next),
         (route) => false,
       );
     } else {
@@ -92,7 +100,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   Widget build(BuildContext context) {
     final mm = '00:${_seconds.toString().padLeft(2, '0')}';
     return AuthScaffold(
-      title: 'Verify your email',
+      title: tr('Verify your email'),
       subtitle: 'Enter the 6-digit code sent to ${widget.email}',
       child: Column(
         children: [
@@ -116,8 +124,12 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
               color: AppColors.text,
             ),
             decoration: InputDecoration(
-              hintText: '------',
-              hintStyle: const TextStyle(color: AppColors.border, letterSpacing: 12, fontSize: 30),
+              hintText: tr('------'),
+              hintStyle: const TextStyle(
+                color: AppColors.border,
+                letterSpacing: 12,
+                fontSize: 30,
+              ),
               filled: true,
               fillColor: Colors.white,
               contentPadding: const EdgeInsets.symmetric(vertical: 18),
@@ -131,13 +143,16 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 2,
+                ),
               ),
             ),
           ),
           const SizedBox(height: 10),
-          const Text(
-            'Check your inbox (and the Spam folder). You can paste the code.',
+          Text(
+            tr('Check your inbox (and the Spam folder). You can paste the code.'),
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 12, color: AppColors.muted),
           ),
@@ -145,8 +160,10 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text("Didn't receive it?",
-                  style: TextStyle(fontSize: 12, color: AppColors.muted)),
+              const Text(
+                "Didn't receive it?",
+                style: TextStyle(fontSize: 12, color: AppColors.muted),
+              ),
               const SizedBox(width: 4),
               GestureDetector(
                 onTap: _seconds == 0 ? _resend : null,
@@ -163,7 +180,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
           ),
           const SizedBox(height: 18),
           PrimaryButton(
-            label: 'Verify & continue',
+            label: tr('Verify & continue'),
             icon: Icons.shield_outlined,
             loading: _loading,
             onPressed: _verify,
@@ -173,4 +190,3 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     );
   }
 }
-
