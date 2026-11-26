@@ -87,9 +87,11 @@ async function main() {
   await Conversation.deleteMany({ _id: { $in: convs.map(c => c._id) } });
 
   // ---------------------------------------------------------------- listings
+  let spread = 0; // fixed, repeatable offsets so demo pins don't all sit on one point
+  const jitter = () => (((spread++ * 37) % 9) - 4) * 0.005;
   const L = (who, kind, title, category, price, qty, extra) => ({
     seller: u[who].id, sellerName: u[who].name, sellerRole: kind === 'input' ? 'supplier' : 'farmer', kind,
-    location: u[who].city, sellerPhone: u[who].phone, lat: u[who].lat + (Math.random() - 0.5) * 0.04, lng: u[who].lng + (Math.random() - 0.5) * 0.04,
+    location: u[who].city, sellerPhone: u[who].phone, lat: u[who].lat + jitter(), lng: u[who].lng + jitter(),
     title, category, pricePerKg: price, quantityKg: qty, grade: 'Grade A', verified: true, rating: 0, reviews: 0, sales: 0,
     availableUntil: ahead(20), status: 'active', ...extra
   });

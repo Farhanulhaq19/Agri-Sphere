@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:agrisphere/modules/module_06_expert/screens/ask_expert_screen.dart';
+import 'package:agrisphere/modules/module_10_warehouse/screens/my_storage_screen.dart';
+import 'package:agrisphere/modules/module_10_warehouse/screens/warehouse_browse_screen.dart';
 import 'package:agrisphere/modules/module_12_ai/agri_chatbot_screen.dart';
 import 'package:agrisphere/core/i18n/app_lang.dart';
 import 'package:agrisphere/core/services/agri_api.dart';
@@ -124,6 +127,16 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
                           _quick(Icons.engineering_outlined, 'Technicians', () => _open(const TechniciansScreen())),
                           _quick(Icons.calendar_month_outlined, 'Schedule', () => _open(const OwnerScheduleScreen())),
                           _quick(Icons.build_outlined, 'Maintenance', () => _open(const MaintenanceScreen())),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      // machinery owners also use other AgriSphere services: storage space and expert advice
+                      Row(
+                        children: [
+                          _quick(Icons.warehouse_outlined, 'Rent storage', () => _open(const WarehouseBrowseScreen())),
+                          _quick(Icons.inventory_2_outlined, 'My stored stock', () => _open(const MyStorageScreen())),
+                          _quick(Icons.support_agent, 'Ask expert', () => _open(const AskExpertScreen())),
+                          _quick(Icons.smart_toy_outlined, 'AgriChatBot', () => _open(const AgriChatBotScreen(role: 'machinery'))),
                         ],
                       ),
                       const SizedBox(height: 8),
