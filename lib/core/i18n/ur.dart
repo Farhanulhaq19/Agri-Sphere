@@ -1160,4 +1160,12 @@ const Map<String, String> kUrdu = {
   'Will rice prices go up next month?': 'کیا اگلے مہینے چاول کی قیمتیں بڑھیں گی؟',
   'How does delivery and Cash on Delivery work?': 'ترسیل اور کیش آن ڈیلیوری کیسے کام کرتی ہے؟',
   'How should I store potatoes after buying in bulk?': 'زیادہ مقدار میں خریدنے کے بعد آلو کیسے رکھوں؟',
+  'More services': 'مزید سہولیات',
+  'Rent storage': 'گودام کرائے پر لیں',
+  'My stored stock': 'میرا محفوظ اسٹاک',
+  'Keep stock in a warehouse': 'اسٹاک گودام میں رکھیں',
+  'Monitor stock & payments': 'اسٹاک اور ادائیگیاں دیکھیں',
+  'Expert advice': 'ماہرانہ مشورہ',
+  'AI help any time': 'ہر وقت اے آئی مدد',
+  'AgriChatBot': 'ایگری چیٹ بوٹ',
 };

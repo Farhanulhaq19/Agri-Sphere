@@ -1,4 +1,5 @@
 const express = require('express');
+const { safe } = require('../utils/safeLog');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -137,7 +138,7 @@ async function issueCode(Model, email, name, purpose) {
     console.error('Email send failed:', e.message);
   }
   const dev = process.env.DEV_MODE === 'true';
-  if (!sent) console.log(`[OTP:${purpose}] code for ${email}: ${code}`);
+  if (!sent) console.log(`[OTP:${safe(purpose)}] code for ${safe(email)}: ${safe(code)}`);
   return { sent, dev, code };
 }
 

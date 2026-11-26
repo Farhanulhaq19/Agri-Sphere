@@ -20,7 +20,7 @@ if (!process.env.MONGO_URI) {
 const app = express();
 app.set('trust proxy', 1); // correct client IPs behind Render / other hosting proxies (rate limits)
 // security headers; images must stay loadable from the web app on another origin
-app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' }, contentSecurityPolicy: false }));
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json({ limit: '8mb' })); // photos / payment screenshots are sent as base64
 app.use(sanitize); // blocks NoSQL-injection style input on every route
@@ -62,7 +62,7 @@ async function connect(attempt = 1) {
   try {
     await mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 8000 });
     console.log('MongoDB connected');
-    require('./utils/indexes').ensureIndexes();
+    require('./utils/indexes').ensureIndexes().catch((e) => console.warn('Index setup failed:', e.message));
     if (!started) {
       started = true;
       server.listen(PORT, '0.0.0.0', () => console.log('API running on port ' + PORT));
@@ -70,10 +70,10 @@ async function connect(attempt = 1) {
   } catch (e) {
     const wait = Math.min(30, attempt * 5);
     console.error(`MongoDB connection failed (${e.message}). Retrying in ${wait}s...`);
-    setTimeout(() => connect(attempt + 1), wait * 1000);
+    setTimeout(() => { connect(attempt + 1).catch((err) => console.error(err.message)); }, wait * 1000);
   }
 }
 mongoose.connection.on('disconnected', () => console.warn('MongoDB disconnected - mongoose will reconnect automatically'));
-connect();
+connect().catch((e) => console.error('Start-up failed:', e.message));
 
 module.exports = { app };

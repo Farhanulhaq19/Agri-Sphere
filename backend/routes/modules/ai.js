@@ -14,6 +14,7 @@ const { h, bad, out } = require('../../utils/http');
 const { saveImage } = require('../../utils/uploads');
 const { rateLimit } = require('../../utils/rateLimit');
 const kb = require('../../utils/farmKB');
+const { safe } = require('../../utils/safeLog');
 
 const router = express.Router();
 
@@ -194,7 +195,7 @@ router.post('/ai/chat', chatLimit, h(async (req, res) => {
     else if (p === 'anthropic') reply = await claudeChat(system, history);
   } catch (e) {
     if (e.status === 429) throw e;
-    console.warn('AI provider failed, using built-in guide:', e.message);
+    console.warn('AI provider failed, using built-in guide:', safe(e.message));
     ollamaOk = null; // re-check next time
     p = 'offline';
   }
@@ -286,7 +287,7 @@ router.post('/ai/diagnose', doctorLimit, h(async (req, res) => {
     else if (p === 'anthropic') result = await claudeDiagnose(DOCTOR_SYSTEM, mediaType, m[2], ask);
   } catch (e) {
     if (e.status === 429) throw e;
-    console.warn('AI provider failed, using built-in guide:', e.message);
+    console.warn('AI provider failed, using built-in guide:', safe(e.message));
     ollamaOk = null;
   }
   if (!result) {

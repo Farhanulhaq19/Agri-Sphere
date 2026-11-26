@@ -91,7 +91,8 @@ class _ExpertHomeScreenState extends State<ExpertHomeScreen> {
           GreenHeader(
             title: tr('Expert desk'),
             subtitle: tr('Answer farmers\' questions'),
-            trailing: const AccountButton(),
+            // opened from another role (e.g. a supplier): show a close button instead of the account menu
+            trailing: Navigator.canPop(context) ? CircleBtn(icon: Icons.close, onTap: () => Navigator.pop(context)) : const AccountButton(),
           ),
           Padding(
             padding: const EdgeInsets.all(16),

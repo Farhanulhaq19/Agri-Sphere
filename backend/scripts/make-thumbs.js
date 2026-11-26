@@ -18,4 +18,7 @@ const { makeThumb, thumbName } = require('../utils/uploads');
     }
   }
   console.log('Thumbnails created:', n);
-})();
+})().catch((e) => {
+  console.error('Thumbnail script failed:', e.message);
+  process.exit(1);
+});

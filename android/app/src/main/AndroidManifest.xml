@@ -1,4 +1,4 @@
-﻿<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
@@ -6,7 +6,8 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
     <queries><intent><action android:name="android.intent.action.VIEW"/><data android:scheme="https"/></intent><intent><action android:name="android.speech.RecognitionService"/></intent><intent><action android:name="android.intent.action.DIAL"/><data android:scheme="tel"/></intent><intent><action android:name="android.intent.action.VIEW"/><data android:scheme="tel"/></intent></queries>
-<application android:usesCleartextTraffic="true"
+<application android:allowBackup="false"
+        android:fullBackupContent="false"
         android:label="AgriSphere"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

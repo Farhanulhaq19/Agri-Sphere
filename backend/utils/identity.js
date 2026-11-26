@@ -99,7 +99,7 @@ async function notify(user, title, body, type, ref) {
     const n = await Notification.create({ user: String(user), title, body, type: type || 'info', ref: ref || '' });
     // lazy requires: realtime.js and push.js both depend on this file
     require('./realtime').emitTo(user, 'notification', { id: String(n._id), title, body, type: n.type, ref: n.ref });
-    require('./push').sendPush(user, title, body, { type: n.type, ref: n.ref });
+    require('./push').sendPush(user, title, body, { type: n.type, ref: n.ref }).catch(() => { /* push is best-effort */ });
   } catch (e) { /* notifications must never break the action */ }
 }
 

@@ -9,6 +9,8 @@ const { requireRole, notify, userModel } = require('../../utils/identity');
 const router = express.Router();
 const only = requireRole('admin');
 const DAY = 864e5;
+const PAY_STATUS = { under_review: 'under_review', paid: 'paid', rejected: 'rejected' };
+const LISTING_STATUS = { active: 'active', paused: 'paused', removed: 'removed' };
 
 // ---------------------------------------------------------------- overview with charts
 router.get('/admin/overview', only, h(async (req, res) => {
@@ -82,7 +84,8 @@ router.get('/admin/stats', only, h(async (req, res) => {
 
 // ---------------------------------------------------------------- payment verification queue (money goes to the platform's Easypaisa)
 router.get('/admin/payments', only, h(async (req, res) => {
-  const status = ['under_review', 'paid', 'rejected'].includes(req.query.status) ? req.query.status : 'under_review';
+  // look the value up in a fixed table so only known constants reach the database query
+  const status = PAY_STATUS[String(req.query.status)] || 'under_review';
   const list = await Order.find({ paymentStatus: status, payment: { $ne: 'Cash' } }).sort({ updatedAt: -1 }).limit(100);
   res.json({ items: list.map(o => ({ ...out(o), canVerify: status === 'under_review' })) });
 }));
@@ -129,7 +132,8 @@ router.patch('/admin/verify/:userId', only, h(async (req, res) => {
 // ---------------------------------------------------------------- listing moderation
 router.get('/admin/listings', only, h(async (req, res) => {
   const f = {};
-  if (req.query.status && req.query.status !== 'all') f.status = req.query.status;
+  const st = LISTING_STATUS[String(req.query.status)];
+  if (st) f.status = st;
   if (req.query.q) {
     const r = new RegExp(esc(req.query.q), 'i');
     f.$or = [{ title: r }, { sellerName: r }, { category: r }];

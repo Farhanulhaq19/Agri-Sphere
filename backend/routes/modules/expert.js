@@ -20,13 +20,14 @@ router.post('/queries', h(async (req, res) => {
     owner: req.me.id, ownerName: req.me.name, category: b.category || 'Crop disease',
     subject: String(b.subject).trim(), details: String(b.details).trim()
   });
-  const experts = await Profile.find({ role: 'expert' }).limit(100);
+  // experts and fertilizer suppliers both give advice
+  const experts = await Profile.find({ role: { $in: ['expert', 'supplier'] } }).limit(200);
   for (const e of experts) await notify(e.user, 'New question: ' + q.subject, req.me.name + ' asked about ' + q.category, 'query', String(q._id));
   res.status(201).json(out(q));
 }));
 
 // ----- expert side -----
-router.get('/expert/queries', requireRole('expert', 'admin'), h(async (req, res) => {
+router.get('/expert/queries', requireRole('expert', 'supplier', 'admin'), h(async (req, res) => {
   const tab = req.query.status === 'answered' ? 'answered' : 'open';
   const filter = tab === 'open' ? { status: 'open' } : { expert: req.me.id };
   const list = await Query.find(filter).sort({ createdAt: -1 }).limit(50);
@@ -36,7 +37,7 @@ router.get('/expert/queries', requireRole('expert', 'admin'), h(async (req, res)
   });
 }));
 
-router.post('/expert/queries/:id/answer', requireRole('expert', 'admin'), h(async (req, res) => {
+router.post('/expert/queries/:id/answer', requireRole('expert', 'supplier', 'admin'), h(async (req, res) => {
   const q = await Query.findById(req.params.id);
   if (!q) throw bad('Question not found', 404);
   const answer = String((req.body || {}).answer || '').trim();
@@ -44,7 +45,7 @@ router.post('/expert/queries/:id/answer', requireRole('expert', 'admin'), h(asyn
   q.answer = answer;
   q.status = 'answered';
   q.expert = req.me.id;
-  q.expertName = req.me.name;
+  q.expertName = req.me.role === 'supplier' ? req.me.name + ' (Supplier)' : req.me.name;
   q.answeredAt = new Date();
   await q.save();
   await Profile.updateOne({ user: req.me.id }, { $inc: { completed: 1 } });
