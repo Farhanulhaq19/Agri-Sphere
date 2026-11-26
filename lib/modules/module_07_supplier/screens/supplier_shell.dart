@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:agrisphere/core/i18n/app_lang.dart';
 import 'package:agrisphere/core/widgets/app_ui.dart';
 import 'supplier_dashboard_screen.dart';
 import 'supplier_products_screen.dart';
@@ -30,11 +31,27 @@ class _SupplierShellState extends State<SupplierShell> {
         onDestinationSelected: _go,
         backgroundColor: Colors.white,
         indicatorColor: C.green,
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard, color: Colors.white), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2, color: Colors.white), label: 'Products'),
-          NavigationDestination(icon: Icon(Icons.local_shipping_outlined), selectedIcon: Icon(Icons.local_shipping, color: Colors.white), label: 'Orders'),
-          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person, color: Colors.white), label: 'Profile'),
+        destinations: [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard, color: Colors.white),
+            label: tr('Home'),
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.inventory_2_outlined),
+            selectedIcon: Icon(Icons.inventory_2, color: Colors.white),
+            label: tr('Products'),
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.local_shipping_outlined),
+            selectedIcon: Icon(Icons.local_shipping, color: Colors.white),
+            label: tr('Orders'),
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person, color: Colors.white),
+            label: tr('Profile'),
+          ),
         ],
       ),
     );
