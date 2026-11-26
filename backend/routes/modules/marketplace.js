@@ -189,7 +189,7 @@ router.get('/market-insight', h(async (req, res) => {
     const d = new Date(x.t).toISOString().slice(0, 10);
     (byDay[d] = byDay[d] || []).push(x.p);
   });
-  const series = Object.keys(byDay).sort().map(d => ({ date: d, price: Math.round(byDay[d].reduce((a, b) => a + b, 0) / byDay[d].length) }));
+  const series = Object.keys(byDay).sort((a, b) => a.localeCompare(b)).map(d => ({ date: d, price: Math.round(byDay[d].reduce((a, b) => a + b, 0) / byDay[d].length) }));
   const current = series.length ? series.slice(-5).reduce((a, s) => a + s.price, 0) / Math.min(5, series.length) : 0;
 
   // least-squares line through the daily averages

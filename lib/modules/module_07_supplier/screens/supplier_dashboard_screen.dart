@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:agrisphere/modules/module_06_expert/screens/expert_home_screen.dart';
+import 'package:agrisphere/modules/module_10_warehouse/screens/my_storage_screen.dart';
+import 'package:agrisphere/modules/module_10_warehouse/screens/warehouse_browse_screen.dart';
 import 'package:agrisphere/modules/module_12_ai/agri_chatbot_screen.dart';
 import 'package:agrisphere/core/i18n/app_lang.dart';
 import 'package:agrisphere/core/services/agri_api.dart';
@@ -41,6 +44,26 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
       ),
     ),
   );
+
+  Widget _service(IconData icon, String title, String sub, Widget page) => Expanded(
+        child: AppCard(
+          margin: EdgeInsets.zero,
+          onTap: () async {
+            await Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+            if (mounted) _reload();
+          },
+          child: Row(children: [
+            CircleAvatar(radius: 18, backgroundColor: C.light, child: Icon(icon, color: C.green, size: 20)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(tr(title), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                Text(tr(sub), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10.5, color: C.grey)),
+              ]),
+            ),
+          ]),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -121,6 +144,18 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                           _stat(m['delivered'], 'Delivered', C.green),
                         ],
                       ),
+                      const SectionTitle('More services'),
+                      Row(children: [
+                        _service(Icons.warehouse_outlined, 'Rent storage', 'Keep stock in a warehouse', const WarehouseBrowseScreen()),
+                        const SizedBox(width: 8),
+                        _service(Icons.inventory_2_outlined, 'My stored stock', 'Monitor stock & payments', const MyStorageScreen()),
+                      ]),
+                      const SizedBox(height: 8),
+                      Row(children: [
+                        _service(Icons.support_agent, 'Expert advice', 'Answer farmers\' questions', const ExpertHomeScreen()),
+                        const SizedBox(width: 8),
+                        _service(Icons.smart_toy_outlined, 'AgriChatBot', 'AI help any time', const AgriChatBotScreen(role: 'supplier')),
+                      ]),
                       if (low.isNotEmpty) ...[
                         const SectionTitle('Low stock'),
                         ...low.map(
