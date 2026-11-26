@@ -1,8 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../core/theme/app_theme.dart';
+import 'package:agrisphere/core/widgets/lang_button.dart';
+import 'package:agrisphere/core/i18n/app_lang.dart';
+import 'package:agrisphere/core/theme/app_theme.dart';
 
-String roleDisplay(String role) => role == 'Expert' ? 'Agri Expert' : role;
+String roleDisplay(String role) => tr(_roleDisplayEn(role));
+
+String _roleDisplayEn(String role) {
+  switch (role.toLowerCase().replaceAll(RegExp(r'[^a-z]'), '')) {
+    case 'expert':
+      return 'Agri Expert';
+    case 'machineryowner':
+      return 'Machinery Owner';
+    case 'warehouseowner':
+      return 'Warehouse Owner';
+    case 'buyer':
+      return 'Market Person';
+    case 'supplier':
+      return 'Fertilizer Supplier';
+    default:
+      return role;
+  }
+}
 
 /// Green gradient header + rounded light sheet used by all auth screens.
 class AuthScaffold extends StatelessWidget {
@@ -24,7 +43,9 @@ class AuthScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+      body: Stack(
+        children: [
+          Positioned.fill(child: Container(
         decoration: const BoxDecoration(gradient: AppColors.headerGradient),
         child: Column(
           children: [
@@ -42,10 +63,14 @@ class AuthScaffold extends StatelessWidget {
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
                       )
                     else
@@ -56,12 +81,15 @@ class AuthScaffold extends StatelessWidget {
                       width: 48,
                       height: 48,
                       cacheWidth: 150,
-                      errorBuilder: (_, __, ___) =>
-                          const Icon(Icons.eco_outlined, color: Colors.white, size: 40),
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.eco_outlined,
+                        color: Colors.white,
+                        size: 40,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      title,
+                      tr(title),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 26,
@@ -71,9 +99,9 @@ class AuthScaffold extends StatelessWidget {
                     if (subtitle != null) ...[
                       const SizedBox(height: 6),
                       Text(
-                        subtitle!,
+                        tr(subtitle!),
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           fontSize: 13,
                         ),
                       ),
@@ -108,6 +136,13 @@ class AuthScaffold extends StatelessWidget {
             ),
           ],
         ),
+      )),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            right: 16,
+            child: const LangButton(),
+          ),
+        ],
       ),
     );
   }
@@ -151,7 +186,7 @@ class AppTextField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          tr(label),
           style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
@@ -169,7 +204,7 @@ class AppTextField extends StatelessWidget {
           autovalidateMode: AutovalidateMode.onUserInteraction,
           style: const TextStyle(fontSize: 14, color: AppColors.text),
           decoration: InputDecoration(
-            hintText: hint,
+            hintText: tr(hint),
             hintStyle: const TextStyle(color: AppColors.muted, fontSize: 14),
             prefixIcon: Icon(icon, size: 20, color: AppColors.muted),
             suffixIcon: suffix,
@@ -211,7 +246,7 @@ class PrimaryButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.35),
+            color: AppColors.primary.withValues(alpha: 0.35),
             blurRadius: 12,
             offset: const Offset(0, 5),
           ),
@@ -227,7 +262,10 @@ class PrimaryButton extends StatelessWidget {
                 ? const SizedBox(
                     width: 22,
                     height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
                   )
                 : Row(
                     mainAxisSize: MainAxisSize.min,
@@ -237,7 +275,7 @@ class PrimaryButton extends StatelessWidget {
                         const SizedBox(width: 8),
                       ],
                       Text(
-                        label,
+                        tr(label),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 15,
@@ -287,13 +325,16 @@ class SocialButton extends StatelessWidget {
               const SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2.2, color: AppColors.primary),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  color: AppColors.primary,
+                ),
               )
             else ...[
               Icon(icon, size: 24, color: AppColors.text),
               const SizedBox(width: 8),
               Text(
-                label,
+                tr(label),
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -319,7 +360,10 @@ class OrDivider extends StatelessWidget {
         const Expanded(child: Divider(color: AppColors.border)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(text, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+          child: Text(
+            tr(text),
+            style: const TextStyle(fontSize: 12, color: AppColors.muted),
+          ),
         ),
         const Expanded(child: Divider(color: AppColors.border)),
       ],
@@ -344,12 +388,15 @@ class AuthFooterLink extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(text, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+        Text(
+          tr(text),
+          style: const TextStyle(fontSize: 12.5, color: AppColors.muted),
+        ),
         const SizedBox(width: 4),
         GestureDetector(
           onTap: onTap,
           child: Text(
-            action,
+            tr(action),
             style: const TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w700,

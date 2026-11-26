@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:agrisphere/modules/module_04_marketplace/widgets/product_card.dart';
+import 'package:agrisphere/core/i18n/app_lang.dart';
 import 'package:agrisphere/core/widgets/app_ui.dart';
 import 'package:agrisphere/modules/module_02_dashboard/screens/dashboard_screen.dart';
 import 'package:agrisphere/modules/module_03_crops/screens/my_crops_screen.dart';
@@ -32,12 +34,35 @@ class _FarmerBuyerShellState extends State<FarmerBuyerShell> {
         onDestinationSelected: _go,
         backgroundColor: Colors.white,
         indicatorColor: C.green,
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home, color: Colors.white), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.grass_outlined), selectedIcon: Icon(Icons.grass, color: Colors.white), label: 'Crops'),
-          NavigationDestination(icon: Icon(Icons.search), selectedIcon: Icon(Icons.search, color: Colors.white), label: 'Explore'),
-          NavigationDestination(icon: Icon(Icons.shopping_cart_outlined), selectedIcon: Icon(Icons.shopping_cart, color: Colors.white), label: 'Cart'),
-          NavigationDestination(icon: Icon(Icons.local_shipping_outlined), selectedIcon: Icon(Icons.local_shipping, color: Colors.white), label: 'Orders'),
+        destinations: [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home, color: Colors.white),
+            label: tr('Home'),
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.grass_outlined),
+            selectedIcon: Icon(Icons.grass, color: Colors.white),
+            label: tr('Crops'),
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.search),
+            selectedIcon: Icon(Icons.search, color: Colors.white),
+            label: tr('Explore'),
+          ),
+          NavigationDestination(
+            icon: ValueListenableBuilder<int>(
+              valueListenable: CartBadge.count,
+              builder: (_, n, _) => Badge(isLabelVisible: n > 0, label: Text('$n'), child: const Icon(Icons.shopping_cart_outlined)),
+            ),
+            selectedIcon: const Icon(Icons.shopping_cart, color: Colors.white),
+            label: tr('Cart'),
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.local_shipping_outlined),
+            selectedIcon: Icon(Icons.local_shipping, color: Colors.white),
+            label: tr('Orders'),
+          ),
         ],
       ),
     );
