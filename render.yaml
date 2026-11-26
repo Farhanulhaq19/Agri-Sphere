@@ -1,0 +1,42 @@
+# Render Blueprint: deploys the AgriSphere API in one click.
+# Render dashboard -> New -> Blueprint -> pick this repository. Fill the secret values when asked.
+services:
+  - type: web
+    name: agrisphere-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: MONGO_URI            # MongoDB Atlas connection string
+        sync: false
+      - key: JWT_SECRET           # long random text
+        generateValue: true
+      - key: ANTHROPIC_API_KEY    # AgriChatBot + Crop Doctor
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON  # paste the whole service-account JSON (push notifications)
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: DEV_MODE
+        value: "false"
+      - key: SEED_DEMO_DATA
+        value: "true"
+      - key: CORS_ORIGIN
+        value: "*"
+    # Photos are stored on disk. Render's free disk is wiped on every deploy/restart;
+    # for permanent photos add a disk (paid plan) by un-commenting:
+    # disk:
+    #   name: uploads
+    #   mountPath: /opt/render/project/src/backend/uploads
+    #   sizeGB: 1
