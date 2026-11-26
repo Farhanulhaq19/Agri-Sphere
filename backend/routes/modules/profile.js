@@ -14,7 +14,7 @@ router.get('/me', h(async (req, res) => {
     profile = await ensureProfile(me);
     unread = await Notification.countDocuments({ user: me.id, read: false });
   }
-  res.json({ id: me.id, name: me.name, email: me.email, role: me.role, demo: !!me.demo, profile: profile ? out(profile) : null, unread });
+  res.json({ id: me.id, name: me.name, email: me.email, role: me.role, roles: me.roles || [me.role], phone: me.phone || '', demo: !!me.demo, profile: profile ? out(profile) : null, unread });
 }));
 
 const EDITABLE = ['name', 'phone', 'businessName', 'city', 'address', 'licenseNo', 'categories', 'specialization', 'experienceYears', 'bio', 'farmLocation'];

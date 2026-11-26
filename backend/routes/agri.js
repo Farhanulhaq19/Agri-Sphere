@@ -1,6 +1,7 @@
 const express = require('express');
 const { identify } = require('../utils/identity');
 const { seed } = require('../utils/seed');
+const { seedFleet } = require('../utils/seedFleet');
 
 const router = express.Router();
 router.use(express.json());
@@ -25,13 +26,13 @@ let seeded = false;
 router.use(async (req, res, next) => {
   if (!seeded && process.env.SEED_DEMO_DATA !== 'false') {
     seeded = true;
-    try { await seed(); console.log('AgriSphere demo data ready'); }
+    try { await seed(); await seedFleet(); console.log('AgriSphere demo data ready'); }
     catch (e) { seeded = false; console.error('Seed failed:', e.message); }
   }
   next();
 });
 
-['profile', 'farmer', 'marketplace', 'orders', 'expert', 'supplier', 'admin'].forEach(m => {
+['profile', 'farmer', 'marketplace', 'offers', 'orders', 'expert', 'supplier', 'admin', 'machinery', 'warehouse', 'uploads', 'social', 'ai'].forEach(m => {
   router.use(require('./modules/' + m));
 });
 

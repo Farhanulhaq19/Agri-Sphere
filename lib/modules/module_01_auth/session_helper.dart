@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:agrisphere/core/services/push.dart';
+import 'package:agrisphere/core/services/realtime.dart';
+import 'package:agrisphere/core/services/api_service.dart';
 import 'package:agrisphere/core/services/agri_api.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:agrisphere/modules/module_01_auth/screens/onboarding_screen.dart';
 
+/// Clears the saved login (token, roles, name) and returns to the first screen.
 Future<void> logout(BuildContext context) async {
+  await Push.stop();
+  Realtime.disconnect();
+  await ApiService.instance.logout();
   AgriApi.token = null;
-  try {
-    final sp = await SharedPreferences.getInstance();
-    for (final k in ['token', 'auth_token', 'authToken', 'jwt', 'access_token', 'accessToken']) {
-      await sp.remove(k);
-    }
-  } catch (_) {}
+  await AgriApi.clearCache();
   if (!context.mounted) return;
   Navigator.pushAndRemoveUntil(
     context,
