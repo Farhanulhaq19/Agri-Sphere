@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:agrisphere/core/widgets/lang_button.dart';
+import 'package:agrisphere/core/i18n/app_lang.dart';
 import 'package:agrisphere/core/theme/app_theme.dart';
 import 'package:agrisphere/modules/module_01_auth/screens/login_screen.dart';
 import 'package:agrisphere/modules/module_01_auth/screens/role_selection_screen.dart';
@@ -15,8 +17,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _page = 0;
 
   static const List<List<String>> _slides = [
-    ['Grow smarter.\nSell better.', 'One platform for farmers, buyers, agri experts and suppliers.'],
-    ['Trade with trust.', 'List your crops and reach verified buyers directly.'],
+    [
+      'Grow smarter.\nSell better.',
+      'One platform for farmers, buyers, agri experts and suppliers.',
+    ],
+    [
+      'Trade with trust.',
+      'List your crops and reach verified buyers directly.',
+    ],
     ['Ask the experts.', 'Get advisories and answers for your farm.'],
   ];
 
@@ -39,7 +47,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           Icon(icon, size: 14, color: Colors.white),
           const SizedBox(width: 5),
-          Text(label, style: const TextStyle(color: Colors.white, fontSize: 11)),
+          Text(
+            tr(label),
+            style: const TextStyle(color: Colors.white, fontSize: 11),
+          ),
         ],
       ),
     );
@@ -53,6 +64,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: Stack(
           fit: StackFit.expand,
           children: [
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 10,
+              right: 16,
+              child: const LangButton(),
+            ),
             Positioned(
               right: 24,
               bottom: 190,
@@ -81,15 +97,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: Row(mainAxisSize: MainAxisSize.min, children: [ Image.asset('assets/img/2_mark_transparent.png', width: 28, height: 28, cacheWidth: 100, errorBuilder: (_, __, ___) => const Icon(Icons.eco_outlined, color: Colors.white, size: 18)),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            'assets/img/2_mark_transparent.png',
+                            width: 28,
+                            height: 28,
+                            cacheWidth: 100,
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.eco_outlined,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ),
                           SizedBox(width: 8),
                           Text(
-                            'AgriSphere',
+                            tr('AgriSphere'),
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
@@ -110,7 +142,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _slides[i][0],
+                              tr(_slides[i][0]),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 34,
@@ -120,7 +152,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              _slides[i][1],
+                              tr(_slides[i][1]),
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.85),
                                 fontSize: 14,
@@ -168,13 +200,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                         onPressed: () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const RoleSelectionScreen(),
+                          ),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('Get started',
-                                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                            Text(
+                              tr('Get started'),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                              ),
+                            ),
                             SizedBox(width: 6),
                             Icon(Icons.chevron_right, size: 20),
                           ],
@@ -186,10 +225,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: TextButton(
                         onPressed: () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const LoginScreen(),
+                          ),
                         ),
-                        child: const Text(
-                          'I already have an account',
+                        child: Text(
+                          tr('I already have an account'),
                           style: TextStyle(color: Colors.white, fontSize: 13),
                         ),
                       ),
