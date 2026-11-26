@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:agrisphere/core/i18n/app_lang.dart';
 import 'package:agrisphere/core/services/agri_api.dart';
 import 'package:agrisphere/core/widgets/app_ui.dart';
 
@@ -57,10 +58,21 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
       context: context,
       builder: (d) => AlertDialog(
         title: Text('Cancel order #${o['number']}?'),
-        content: const Text('The buyer will be notified and the stock is returned.'),
+        content: Text(
+          tr('The buyer will be notified and the stock is returned.'),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(d, false), child: const Text('Keep')),
-          TextButton(onPressed: () => Navigator.pop(d, true), child: const Text('Cancel order', style: TextStyle(color: Colors.red))),
+          TextButton(
+            onPressed: () => Navigator.pop(d, false),
+            child: Text(tr('Keep')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(d, true),
+            child: Text(
+              tr('Cancel order'),
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
         ],
       ),
     );
@@ -83,43 +95,107 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
               _reload();
               await _f;
             },
-            child: ListView(padding: EdgeInsets.zero, children: [
-              GreenHeader(title: 'Orders', subtitle: '${all.length} total'),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  ChipRow(items: const ['All', 'Pending', 'In progress', 'Delivered'], selected: _filter, onSelect: (v) => setState(() => _filter = v)),
-                  const SizedBox(height: 14),
-                  if (items.isEmpty) const AppCard(child: Text('No orders here.', style: TextStyle(color: C.grey))),
-                  ...items.map((o) {
-                    final s = '${o['status']}';
-                    final nx = _next[s];
-                    return AppCard(
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Row(children: [
-                          Expanded(child: Text('Order #${o['number']} - ${o['buyer']}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13))),
-                          Pill(statusLabel(s), color: statusColor(s)),
-                        ]),
-                        const SizedBox(height: 4),
-                        Text('${o['summary']}', style: const TextStyle(fontSize: 12)),
-                        Text('${o['address']} - ${o['payment']}', style: const TextStyle(fontSize: 11, color: C.grey)),
-                        const SizedBox(height: 8),
-                        Row(children: [
-                          Expanded(child: Text(rs(toNum(o['total'])), style: const TextStyle(fontWeight: FontWeight.w800, color: C.green))),
-                          if (s == 'placed') TextButton(onPressed: () => _cancel(o as Map), child: const Text('Cancel', style: TextStyle(color: Colors.red))),
-                          if (nx != null)
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(backgroundColor: C.green, foregroundColor: Colors.white),
-                              onPressed: () => _setStatus(o as Map, nx[0]),
-                              child: Text(nx[1]),
-                            ),
-                        ]),
-                      ]),
-                    );
-                  }),
-                ]),
-              ),
-            ]),
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                GreenHeader(title: tr('Orders'), subtitle: '${all.length} total'),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ChipRow(
+                        items: const [
+                          'All',
+                          'Pending',
+                          'In progress',
+                          'Delivered',
+                        ],
+                        selected: _filter,
+                        onSelect: (v) => setState(() => _filter = v),
+                      ),
+                      const SizedBox(height: 14),
+                      if (items.isEmpty)
+                        AppCard(
+                          child: Text(
+                            tr('No orders here.'),
+                            style: TextStyle(color: C.grey),
+                          ),
+                        ),
+                      ...items.map((o) {
+                        final s = '${o['status']}';
+                        final nx = _next[s];
+                        return AppCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      'Order #${o['number']} - ${o['buyer']}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                  Pill(statusLabel(s), color: statusColor(s)),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                tr('${o['summary']}'),
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              Text(
+                                '${o['address']} - ${o['payment']}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: C.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      rs(toNum(o['total'])),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        color: C.green,
+                                      ),
+                                    ),
+                                  ),
+                                  if (s == 'placed')
+                                    TextButton(
+                                      onPressed: () => _cancel(o as Map),
+                                      child: Text(
+                                        tr('Cancel'),
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                  if (nx != null)
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: C.green,
+                                        foregroundColor: Colors.white,
+                                      ),
+                                      onPressed: () =>
+                                          _setStatus(o as Map, nx[0]),
+                                      child: Text(nx[1]),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),
