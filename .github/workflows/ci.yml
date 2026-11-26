@@ -41,6 +41,7 @@ jobs:
           node-version: 20
       - run: npm install
       - run: node --check server.js
-      - run: node --check routes/auth.js
-      - run: node --check models/User.js
-      - run: node --check models/EmailOtp.js
+      - name: Syntax check every backend file
+        run: for f in $(find routes models utils scripts -name '*.js'); do node --check "$f" || exit 1; done
+      - name: Unit tests
+        run: npm test

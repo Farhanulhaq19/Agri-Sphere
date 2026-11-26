@@ -2,7 +2,7 @@ const express = require('express');
 const { Listing, Order } = require('../../models/agri');
 const { h, bad, out } = require('../../utils/http');
 const { requireRole, ensureProfile } = require('../../utils/identity');
-const { createListing } = require('../../utils/listings');
+const { createListing, applyListingEdit } = require('../../utils/listings');
 
 const router = express.Router();
 const only = requireRole('supplier');
@@ -56,12 +56,7 @@ router.post('/supplier/products', only, h(async (req, res) => {
 router.patch('/supplier/products/:id', only, h(async (req, res) => {
   const l = await Listing.findOne({ _id: req.params.id, seller: req.me.id });
   if (!l) throw bad('Product not found', 404);
-  const b = req.body || {};
-  if (b.pricePerKg !== undefined) l.pricePerKg = Number(b.pricePerKg);
-  if (b.quantityKg !== undefined) l.quantityKg = Number(b.quantityKg);
-  if (b.status && ['active', 'paused'].includes(b.status)) l.status = b.status;
-  if (b.description !== undefined) l.description = b.description;
-  if (b.brand !== undefined) l.brand = b.brand;
+  applyListingEdit(l, req.body || {});
   await l.save();
   res.json(out(l));
 }));
